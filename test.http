@@ -1,0 +1,20 @@
+### Health check
+GET http://127.0.0.1:3008/health
+
+###
+
+### 建对话
+POST http://127.0.0.1:3008/conversation
+
+###
+
+### 发消息（流式）—— cid 改成上面返回的 id
+POST http://127.0.0.1:3008/chat/1/stream
+Content-Type: application/x-www-form-urlencoded
+
+content=你好，介绍一下你自己
+
+###
+
+### 查对话历史
+GET http://127.0.0.1:3008/conversation/1

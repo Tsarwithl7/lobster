@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="flex h-screen">
+  <aside class="w-64 border-r border-zinc-800 p-3 overflow-y-auto flex-shrink-0">
+    <button hx-post="/conversation" hx-swap="none"
+            hx-on::after-request="window.location='/conversation/'+JSON.parse(event.detail.xhr.responseText).id"
+            class="w-full bg-zinc-800 hover:bg-zinc-700 rounded px-3 py-2 text-sm">
+      + New chat
+    </button>
+    <ul class="mt-4 space-y-1">
+      {% for c in conversations %}
+        <li class="group flex items-center gap-1 rounded hover:bg-zinc-800 {% if cid == c.id %}bg-zinc-800{% endif %}">
+          <a href="/conversation/{{ c.id }}"
+             class="flex-1 px-2 py-1 text-sm truncate">
+            {{ c.title or 'Chat ' ~ c.id }}
+          </a>
+          <button onclick="deleteConv({{ c.id }}, this)"
+                  class="hidden group-hover:block px-1.5 py-1 text-zinc-500 hover:text-red-400 text-xs flex-shrink-0"
+                  title="删除">✕</button>
+        </li>
+      {% endfor %}
+    </ul>
+  </aside>
+
+  <main class="flex-1 flex flex-col min-w-0">
+    <div id="messages" class="flex-1 overflow-y-auto p-6 space-y-4">
+      {% for m in messages %}
+        <div class="max-w-3xl {% if m.role == 'user' %}ml-auto bg-blue-900/40{% else %}bg-zinc-800/60{% endif %} rounded-lg px-4 py-2 whitespace-pre-wrap">{{ m.content }}</div>
+      {% endfor %}
+    </div>
+
+    {% if cid %}
+    <form id="composer" class="border-t border-zinc-800 p-4 flex gap-2" onsubmit="sendMessage(event)">
+      <input name="content"
+             class="flex-1 bg-zinc-900 border border-zinc-800 rounded px-3 py-2 outline-none focus:border-zinc-600"
+             placeholder="问点啥…" autocomplete="off" required autofocus>
+      <button class="bg-blue-600 hover:bg-blue-500 px-4 rounded">Send</button>
+    </form>
+    <script>
+      const cid = {{ cid }};
+      async function sendMessage(e) {
+        e.preventDefault();
+        const form = e.target;
+        const input = form.content;
+        const text = input.value.trim();
+        if (!text) return;
+        input.value = '';
+
+        const msgs = document.getElementById('messages');
+        const userDiv = document.createElement('div');
+        userDiv.className = 'max-w-3xl ml-auto bg-blue-900/40 rounded-lg px-4 py-2 whitespace-pre-wrap';
+        userDiv.textContent = text;
+        msgs.appendChild(userDiv);
+
+        const aiDiv = document.createElement('div');
+        aiDiv.className = 'max-w-3xl bg-zinc-800/60 rounded-lg px-4 py-2 whitespace-pre-wrap';
+        msgs.appendChild(aiDiv);
+        msgs.scrollTop = msgs.scrollHeight;
+
+        const fd = new FormData();
+        fd.append('content', text);
+        const resp = await fetch(`/chat/${cid}/stream`, {method: 'POST', body: fd});
+        if (!resp.ok) { aiDiv.textContent = '[Error ' + resp.status + ']'; return; }
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let buf = '';
+        while (true) {
+          const {done, value} = await reader.read();
+          if (done) break;
+          buf += decoder.decode(value, {stream: true});
+          buf = buf.replace(/\r\n/g, '\n');
+          const events = buf.split('\n\n');
+          buf = events.pop();
+          for (const ev of events) {
+            let event = 'message', data = '';
+            for (const ln of ev.split('\n')) {
+              if (ln.startsWith('event: ')) event = ln.slice(7).trim();
+              else if (ln.startsWith('data: ')) data = ln.slice(6).trim();
+            }
+            if (event === 'token' && data) {
+              try {
+                aiDiv.textContent += JSON.parse(data).t;
+                msgs.scrollTop = msgs.scrollHeight;
+              } catch(e) { console.error('parse error', data, e); }
+            }
+          }
+        }
+      }
+    </script>
+    {% endif %}
+    <script>
+      async function deleteConv(id, btn) {
+        if (!confirm('删除这条对话？')) return;
+        await fetch(`/conversation/${id}`, {method: 'DELETE'});
+        const li = btn.closest('li');
+        li.remove();
+        if (window.location.pathname === `/conversation/${id}`) {
+          window.location.href = '/';
+        }
+      }
+    </script>
+    {% if not cid %}
+    <div class="flex-1 flex items-center justify-center text-zinc-500">
+      Click <span class="mx-1 px-2 py-0.5 bg-zinc-800 rounded">+ New chat</span> to start
+    </div>
+    {% endif %}
+  </main>
+</div>
+{% endblock %}

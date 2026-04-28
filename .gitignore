@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+data/
+data
+*.db
+*.db-wal
+*.db-shm
+.ruff_cache/
+data/
+.venv/
+.env
