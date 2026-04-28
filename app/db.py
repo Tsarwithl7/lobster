@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import aiosqlite
+import sqlite_vec
 
 from app.config import settings
 
@@ -46,6 +47,11 @@ CREATE VIRTUAL TABLE IF NOT EXISTS chunk_fts USING fts5(
 async def init_db():
     Path(settings.db_path).parent.mkdir(parents=True, exist_ok=True)
     async with aiosqlite.connect(settings.db_path) as db:
+        await db.enable_load_extension(True)
+        await db.load_extension(sqlite_vec.loadable_path())
+        await db.enable_load_extension(False)
+
+
         await db.execute("PRAGMA journal_mode=WAL")
         await db.execute("PRAGMA synchronous=NORMAL")
         await db.execute("PRAGMA foreign_keys=ON")
