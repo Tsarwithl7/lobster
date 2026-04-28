@@ -12,4 +12,11 @@ class Settings(BaseSettings):
     port: int = 3008
 
 
+    redis_url: str = "redis://localhost:6379/0"
+    embed_model: str = "BAAI/bge-m3"
+    rerank_model: str = "BAAI/bge-reranker-v2-m3"
+    embed_device: str = "cpu"
+    semantic_cache_threshold: float = 0.92
+
+
 settings = Settings()
