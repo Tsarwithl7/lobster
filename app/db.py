@@ -56,6 +56,12 @@ async def init_db():
         await db.execute("PRAGMA synchronous=NORMAL")
         await db.execute("PRAGMA foreign_keys=ON")
         await db.executescript(SCHEMA)
+        await db.execute("""
+            CREATE VIRTUAL TABLE IF NOT EXISTS chunk_vec USING vec0(
+                chunk_id INTEGER PRIMARY KEY,
+                embedding FLOAT[1024]
+            )
+        """)
         await db.commit()
 
 
