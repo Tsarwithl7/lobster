@@ -40,3 +40,22 @@ class TestIngest:
         async with aiosqlite.connect("data/xia.db") as db:
             rows = await (await db.execute("SELECT count(*) FROM memory_chunk")).fetchone()
             assert rows[0] > 0
+
+
+from app.memory.retriever import retrieve
+from app.memory.store import ingest
+
+
+class TestRetriever:
+    async def test_retrieve_finds_relevant(self):
+        await ingest("AI文档", "人工智能是计算机科学的一个分支。\n\n机器学习是其核心技术。")
+        results = await retrieve("人工智能", n=3)
+        assert len(results) > 0
+        assert any("人工智能" in r["content"] for r in results)
+
+    async def test_retrieve_returns_dict(self):
+        await ingest("测试", "Python是一种编程语言。")
+        results = await retrieve("编程", n=3)
+        for r in results:
+            assert "id" in r
+            assert "content" in r            
