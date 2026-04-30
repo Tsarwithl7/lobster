@@ -79,6 +79,16 @@ async def chat_stream(cid: int, content: str = Form(...)):
         ).fetchall()
         history = [{"role": r["role"], "content": r["content"]} for r in rows]
 
+                # 从记忆库检索相关 chunks，拼成 system 上下文
+        from app.memory.retriever import retrieve
+        mem_chunks = await retrieve(content, n=3)
+        if mem_chunks:
+            context = "\n\n".join(c["content"] for c in mem_chunks)
+            history.insert(0, {
+                "role": "system",
+                "content": f"以下是相关背景知识，回答时可以参考：\n\n{context}"
+            })
+
     async def gen():
         buf = []
         async for tok in stream_chat(history):
