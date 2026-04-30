@@ -1,3 +1,6 @@
+# 使用 Playwright 启动一个全局 Chromium 浏览器复用；每次抓取都新建 page 并在结束后关闭，返回 body 文本。
+
+
 from __future__ import annotations
 
 from playwright.async_api import async_playwright, Browser
