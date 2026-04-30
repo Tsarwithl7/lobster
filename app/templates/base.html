@@ -3,11 +3,32 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>xia</title>
+  <title>Lobster</title>
   <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.3/dist/htmx.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-zinc-950 text-zinc-100 h-screen overflow-hidden">
-  {% block body %}{% endblock %}
+<body class="bg-zinc-950 text-zinc-100 h-screen flex flex-col overflow-hidden">
+
+  <!-- 顶部导航栏 -->
+  <nav class="flex-shrink-0 border-b border-zinc-800 px-4 py-2 flex items-center gap-6">
+    <span class="font-semibold tracking-wide text-zinc-100">🦞 Lobster</span>
+    <a href="/" class="text-sm text-zinc-400 hover:text-zinc-100 transition-colors
+      {% if request.url.path == '/' or request.url.path.startswith('/conversation') %}text-zinc-100{% endif %}">
+      Chat
+    </a>
+    <a href="/memory" class="text-sm text-zinc-400 hover:text-zinc-100 transition-colors
+      {% if request.url.path == '/memory' %}text-zinc-100{% endif %}">
+      记忆库
+    </a>
+    <div class="ml-auto flex items-center gap-2 text-xs text-zinc-600">
+      <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+      在线
+    </div>
+  </nav>
+
+  <div class="flex-1 overflow-hidden">
+    {% block body %}{% endblock %}
+  </div>
+
 </body>
 </html>

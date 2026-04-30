@@ -1,19 +1,21 @@
 import pytest
 import aiosqlite
 
+from app.config import settings
 from app.db import init_db
 from app.memory.chunker import chunk_text
 from app.memory.store import ingest
+from app.memory.retriever import retrieve
 
 
 @pytest.fixture(autouse=True)
 async def clean_db(tmp_path, monkeypatch):
     db_path = str(tmp_path / "test.db")
+    # settings 是单例，改一次所有模块都生效
     monkeypatch.setattr("app.config.settings.db_path", db_path)
-    monkeypatch.setattr("app.memory.store.settings.db_path", db_path)
     await init_db()
     yield
-    
+
 
 class TestChunker:
     def test_short_text_stays_one_chunk(self):
@@ -37,13 +39,9 @@ class TestIngest:
 
     async def test_ingest_creates_chunks(self):
         await ingest("标题", "第一段内容。\n\n第二段内容。\n\n第三段内容。")
-        async with aiosqlite.connect("data/xia.db") as db:
+        async with aiosqlite.connect(settings.db_path) as db:
             rows = await (await db.execute("SELECT count(*) FROM memory_chunk")).fetchone()
             assert rows[0] > 0
-
-
-from app.memory.retriever import retrieve
-from app.memory.store import ingest
 
 
 class TestRetriever:
@@ -58,4 +56,4 @@ class TestRetriever:
         results = await retrieve("编程", n=3)
         for r in results:
             assert "id" in r
-            assert "content" in r            
+            assert "content" in r

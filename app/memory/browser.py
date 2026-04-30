@@ -24,3 +24,13 @@ async def fetch_page(url: str) -> str:
         return await page.inner_text("body")
     finally:
         await page.close()
+
+async def cleanup_browser() -> None:
+    """Close global browser and stop Playwright."""
+    global _pw, _browser
+    if _browser is not None:
+        await _browser.close()
+        _browser = None
+    if _pw is not None:
+        await _pw.stop()
+        _pw = None        

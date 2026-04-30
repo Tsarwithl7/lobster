@@ -9,7 +9,10 @@ from app.routes import chat, health, memory
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
-    yield
+    try:
+        yield
+    finally:
+        await cleanup_browser()
 
 
 app = FastAPI(title="xia", lifespan=lifespan)

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block body %}
+<div class="h-full overflow-y-auto">
 <div class="max-w-3xl mx-auto p-6 space-y-8">
 
   <h1 class="text-xl font-semibold">记忆库</h1>
@@ -74,4 +75,5 @@
     document.getElementById('doc-list').prepend(li);
   }
 </script>
+</div>
 {% endblock %}
