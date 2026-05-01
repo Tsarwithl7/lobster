@@ -16,16 +16,22 @@ def get_client() -> httpx.AsyncClient:
 
 
 async def stream_chat(messages: list[dict]) -> AsyncIterator[str]:
-    model = settings.llm_model.removeprefix("ollama/")
     async with get_client().stream(
         "POST",
-        f"{settings.ollama_base_url}/api/chat",
-        json={"model": model, "messages": messages, "stream": True},
+        f"{settings.vllm_base_url}/v1/chat/completions",
+        json={
+            "model": settings.llm_model,
+            "messages": messages,
+            "stream": True,
+        },
     ) as resp:
         async for line in resp.aiter_lines():
-            if not line:
+            if not line.startswith("data: "):
                 continue
-            data = json.loads(line)
-            tok = data.get("message", {}).get("content", "")
+            payload = line[6:]
+            if payload == "[DONE]":
+                break
+            data = json.loads(payload)
+            tok = data["choices"][0]["delta"].get("content", "")
             if tok:
                 yield tok

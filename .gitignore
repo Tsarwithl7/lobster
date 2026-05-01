@@ -3,11 +3,16 @@ __pycache__/
 *.pyc
 .env
 data/
-data
 *.db
 *.db-wal
 *.db-shm
 .ruff_cache/
-data/
-.venv/
-.env
+# Models & adapters
+models/
+adapters/
+# Logs
+*.log
+wandb/
+# Learning / scratch scripts
+vllm_demo*.py
+scratch_*.pyplayground/
